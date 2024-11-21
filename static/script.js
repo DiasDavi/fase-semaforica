@@ -9,12 +9,14 @@ const detectResult = document.getElementById('detect-result');
 const classResult = document.getElementById('class-result');
 
 // Elementos dos sliders
-const iouSlider = document.getElementById('rangeIoU');
-const confidenceSlider = document.getElementById('rangeConfidenceDetector');
+const detectorIouSlider = document.getElementById('rangeIoU');
+const detectorConfidenceSlider = document.getElementById('rangeConfidenceDetector');
+const classifierConfidenceSlider = document.getElementById('rangeConfidenceClassifier');
 
 // Verifique se a imagem foi carregada corretamente ao carregar a página
 window.onload = async function() {
     await loadDetectorConfig();
+    await loadClassifierConfig();
     checkImage();
 };
 
@@ -34,8 +36,8 @@ async function loadDetectorConfig() {
         const config = await response.json();
 
         
-        iouSlider.value = config.iou * 100;  
-        confidenceSlider.value = config.confidence * 100;  
+        detectorIouSlider.value = config.iou * 100;  
+        detectorConfidenceSlider.value = config.confidence * 100;  
 
         document.getElementById('rangeValueConfidenceDetector').textContent = config.confidence * 100;
         document.getElementById('rangeValueIoU').textContent = config.iou * 100;
@@ -46,7 +48,31 @@ async function loadDetectorConfig() {
     }
 }
 
+async function loadClassifierConfig() {
+    try {
+        const response = await fetch('/classify/config', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
 
+        if (!response.ok) {
+            throw new Error('Erro ao carregar as configurações');
+        }
+
+        const config = await response.json();
+
+        classifierConfidenceSlider.value = config.confidence * 100;  
+
+        document.getElementById('rangeValueConfidenceClassifier').textContent = config.confidence * 100;
+    
+
+    } catch (error) {
+        console.error(error);
+        alert('Erro ao tentar carregar as configurações.');
+    }
+}
 
 // Função para verificar a visibilidade da imagem
 function checkImage() {
@@ -95,19 +121,34 @@ async function updateConfig(iou, confidence) {
 
 // Função para atualizar os valores dos sliders e enviar as configurações
 function updateSliderValue(type, value) {
-    const valueElement = type === 'confidence' 
-        ? document.getElementById('rangeValueConfidenceDetector') 
-        : document.getElementById('rangeValueIoU');
+    var valueElement; 
 
-    valueElement.textContent = value;
-
-    
-    if (type === 'confidence') {
-        updateConfig(iouSlider.value, value);
-    } else if (type === 'iou') {
-        updateConfig(value, confidenceSlider.value);
+    switch (type) {
+        case 'detector-confidence':
+            valueElement = document.getElementById('rangeValueConfidenceDetector');
+            break;
+        case 'classifier-confidence':
+            valueElement = document.getElementById('rangeValueConfidenceClassifier');
+            break;
+        case 'detector-iou':
+            valueElement = document.getElementById('rangeValueIoU');
+            break;
+        default:
+            break;
     }
+
+    if (valueElement) {
+        valueElement.textContent = value;    
+    }
+
+    // Atualiza as configurações dependendo do tipo
+    if (type === 'detector-confidence') {
+        updateConfig(detectorIouSlider.value, value);
+    } else if (type === 'detector-iou') {
+        updateConfig(value, detectorConfidenceSlider.value);
+    } 
 }
+
 
 // Função para tratar o upload do arquivo
 async function handleFileUpload(event) {
