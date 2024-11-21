@@ -1,0 +1,8 @@
+opencv-python
+flask
+torch
+pyyaml
+tensorflow
+pandas
+requests
+Pillow
