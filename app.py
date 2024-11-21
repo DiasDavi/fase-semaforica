@@ -60,6 +60,12 @@ def config_route():
 
     return jsonify({"message": "Configurações atualizadas com sucesso", "iou": config_updates['iou'], "confidence": config_updates['confidence']}), 200
 
+# Rota GET para obter a configuração de confiança do classificador
+@app.route('/classify/config', methods=['GET'])
+def get_classifier_config():
+    # Retornar a configuração de confiança do classificador
+    return jsonify({"confidence": functions.load_classifier_config})
+
 
 
 # Rodar a aplicação Flask
