@@ -13,7 +13,40 @@ const iouSlider = document.getElementById('rangeIoU');
 const confidenceSlider = document.getElementById('rangeConfidenceDetector');
 
 // Verifique se a imagem foi carregada corretamente ao carregar a página
-window.onload = checkImage;
+window.onload = async function() {
+    await loadConfig();
+    checkImage();
+};
+
+async function loadConfig() {
+    try {
+        const response = await fetch('/detect/config', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Erro ao carregar as configurações');
+        }
+
+        const config = await response.json();
+
+        
+        iouSlider.value = config.iou * 100;  
+        confidenceSlider.value = config.confidence * 100;  
+
+        document.getElementById('rangeValueConfidenceDetector').textContent = config.confidence * 100;
+        document.getElementById('rangeValueIoU').textContent = config.iou * 100;
+
+    } catch (error) {
+        console.error(error);
+        alert('Erro ao tentar carregar as configurações.');
+    }
+}
+
+
 
 // Função para verificar a visibilidade da imagem
 function checkImage() {
@@ -39,6 +72,7 @@ function updateImage(base64Image) {
 // Função para enviar as configurações de 'iou' e 'confidence' para o backend
 async function updateConfig(iou, confidence) {
     const configData = {
+        // Divida por 100 para enviar os valores reais (decimais)
         iou: iou / 100,
         confidence: confidence / 100
     };
@@ -54,13 +88,6 @@ async function updateConfig(iou, confidence) {
         });
 
         const result = await response.json();
-
-        if (response.ok) {
-            // Atualiza a interface com os novos valores de configuração
-            console.log('Configurações atualizadas:', result);
-        } else {
-            alert(result.error);
-        }
     } catch (error) {
         alert('Erro ao atualizar as configurações.');
     }
@@ -72,10 +99,9 @@ function updateSliderValue(type, value) {
         ? document.getElementById('rangeValueConfidenceDetector') 
         : document.getElementById('rangeValueIoU');
 
-    // Atualiza o valor exibido na interface
     valueElement.textContent = value;
 
-    // Envia as configurações para o backend
+    
     if (type === 'confidence') {
         updateConfig(iouSlider.value, value);
     } else if (type === 'iou') {

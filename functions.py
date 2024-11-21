@@ -109,6 +109,10 @@ def run(image):
         "image_base64": image_base64
     }
 
+def load_detector_config():
+    with open(detector_config_path, 'r') as file:
+        return yaml.safe_load(file)
+
 # Função para sobrescrever as configurações no arquivo YAML
 def config_detect(updates):
     # Carregar o arquivo de configuração existente

@@ -29,6 +29,18 @@ def detect_route():
     # Retornar os resultados
     return jsonify({"detections": detections})
 
+# Rota GET para obter as configurações do detector
+@app.route('/detect/config', methods=['GET'])
+def get_config():
+    # Carregar as configurações do arquivo YAML
+    config = functions.load_detector_config()
+
+    # Retornar as configurações como um JSON
+    return jsonify({
+        'iou': config.get('iou', 50),  # Valor padrão 50 caso não exista
+        'confidence': config.get('confidence', 50)  # Valor padrão 50 caso não exista
+    })
+
 # Rota POST para atualizar as configurações do detector
 @app.route('/detect/config', methods=['POST'])
 def config_route():
