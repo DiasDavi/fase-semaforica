@@ -1,9 +1,0 @@
-input[type='file'] {
-    display: none;
-}
-
-#fileInputLabel {
-    padding: 2%;
-    border: 1px dashed black;
-    border-radius: 6%;
-}
