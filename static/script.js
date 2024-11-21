@@ -14,11 +14,11 @@ const confidenceSlider = document.getElementById('rangeConfidenceDetector');
 
 // Verifique se a imagem foi carregada corretamente ao carregar a página
 window.onload = async function() {
-    await loadConfig();
+    await loadDetectorConfig();
     checkImage();
 };
 
-async function loadConfig() {
+async function loadDetectorConfig() {
     try {
         const response = await fetch('/detect/config', {
             method: 'GET',
