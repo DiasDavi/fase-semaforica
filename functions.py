@@ -8,10 +8,11 @@ from tensorflow.keras.preprocessing import image as keras_image
 from PIL import Image
 
 # Caminhos para os modelos e configurações
-detector_model_path = 'models/detector/best.pt'  # Caminho para o modelo
+detector_model_path = 'models/detector/detector.pt'  # Caminho para o modelo
 detector_config_path = 'models/detector/config.yaml'  # Caminho para o YAML de configuração
 classifier_model_path = 'models/classifier/classifier.h5'  # Caminho para o modelo de classificação
 classes_path = 'models/classifier/classes.txt'  # Caminho para o arquivo de classes
+classifier_config_path = 'models/classifier/config.yaml'  # Caminho para o YAML de configuração
 
 # Carregar o modelo YOLOv5 e o classificador
 detector_model = torch.hub.load('ultralytics/yolov5', 'custom', path=detector_model_path)
@@ -31,12 +32,18 @@ def load_config(config_path):
 
 # Função de detecção utilizando o modelo e as configurações carregadas
 def run(image):
-    # Carregar as configurações
-    config = load_config(detector_config_path)
+    # Carregar as configurações do detector
+    detector_config = load_config(detector_config_path)
+    # Carregar as configurações do classificador
+    classifier_config = load_classifier_config('models/classifier/config.yaml')
+    
 
     # Configurar IOU e confiança
-    detector_model.iou = config['iou']  
-    detector_model.conf = config['confidence'] 
+    detector_model.iou = detector_config['iou']  
+    detector_model.conf = detector_config['confidence'] 
+
+    # Configurar o limite de confiança para o classificador
+    classifier_confidence_threshold = classifier_config['confidence']
 
     # Redimensionar a imagem para 640x640
     resized_image = cv2.resize(image, (640, 640))
@@ -75,25 +82,26 @@ def run(image):
         classification_label = classification_labels[np.argmax(classification)]
         classification_confidence = float(np.max(classification))
 
-        # Determinar cor do bbox com base na classificação
-        color_map = {'verde': (0, 255, 0), 'amarelo': (0, 255, 255), 'vermelho': (0, 0, 255)}
-        bbox_color = color_map[classification_label]
+        if classification_confidence >= classifier_confidence_threshold:
+            # Determinar cor do bbox com base na classificação
+            color_map = {'verde': (0, 255, 0), 'amarelo': (0, 255, 255), 'vermelho': (0, 0, 255)}
+            bbox_color = color_map[classification_label]
 
-        # Desenhar o bounding box e a classificação na imagem original redimensionada
-        cv2.rectangle(resized_image, (x1, y1), (x2, y2), bbox_color, 2)
-        cv2.putText(resized_image, classification_label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, bbox_color, 2)
+            # Desenhar o bounding box e a classificação na imagem original redimensionada
+            cv2.rectangle(resized_image, (x1, y1), (x2, y2), bbox_color, 2)
+            cv2.putText(resized_image, classification_label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, bbox_color, 2)
 
-        # Adicionar os dados ao resultado final
-        detections.append({
-            "label": detection_label,
-            "bbox": [x1, y1, x2, y2],
-            "confidence": detection_confidence,  # Garantir que é um float nativo
-        })
+            # Adicionar os dados ao resultado final
+            detections.append({
+                "label": detection_label,
+                "bbox": [x1, y1, x2, y2],
+                "confidence": detection_confidence,  # Garantir que é um float nativo
+            })
 
-        classifications.append({
-            "classification": classification_label,
-            "confidence": classification_confidence,  # Garantir que é um float nativo
-        })
+            classifications.append({
+                "classification": classification_label,
+                "confidence": classification_confidence,  # Garantir que é um float nativo
+            })
 
     # Redimensionar a imagem final para 888x640
     final_image = cv2.resize(resized_image, (888, 640))
@@ -109,6 +117,7 @@ def run(image):
         "image_base64": image_base64
     }
 
+# Função para carregar configurações do detector YAML
 def load_detector_config():
     with open(detector_config_path, 'r') as file:
         return yaml.safe_load(file)
@@ -126,3 +135,8 @@ def config_detect(updates):
         yaml.safe_dump(config, file)
 
     print(f"Configurações atualizadas: IOU={config['iou']}, Confiança={config['confidence']}")
+
+# Função para carregar configurações do classificador YAML
+def load_classifier_config():
+     with open(classifier_config_path, 'r') as file:
+        return yaml.safe_load(file)
