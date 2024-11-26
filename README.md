@@ -60,7 +60,7 @@ pip install -r requirements.txt
 │   └── test5.jpg                 
 ```
 
-## Configuração e Execução
+## Executando o Projeto Localmente
 
 ### 1. Clonando o Repositório
 
@@ -89,6 +89,71 @@ python app.py
 ```
 
 A aplicação estará disponível em [http://localhost:5000](http://localhost:5000).
+
+## Executando o Projeto com Docker
+
+Se preferir executar o projeto utilizando Docker, siga as instruções abaixo:
+
+### 1. Clonando o Repositório
+
+Clone este repositório para a sua máquina local:
+
+```bash
+git clone https://github.com/DiasDavi/fase-semaforica.git
+```
+
+### 2. Criando a Imagem Docker
+
+Navegue até a pasta do projeto:
+
+```bash
+cd fase-semaforica
+```
+
+Para construir a imagem Docker, use o comando:
+
+```bash
+docker build -t fase-semaforica:latest .
+```
+
+Este comando criará uma imagem Docker chamada `fase-semaforica` com a tag `latest`.
+
+### 3. Executando o Container
+
+Após criar a imagem, você pode executar o container usando:
+
+
+```bash
+docker build -t fase-semaforica:latest .
+```
+
+docker run -d -p 5000:5000 fase-semaforica:latest
+
+Isso iniciará o container em segundo plano e a aplicação estará disponível em http://localhost:5000.
+
+### 4. Verificando Logs do Container
+
+Para verificar os logs do container em execução, use:
+
+```bash
+docker logs -f <container_id>
+```
+
+Substitua `<container_id>` pelo ID do container em execução, que você pode encontrar com o comando:
+
+```bash
+docker ps
+```
+
+### 5. Parando o Container
+
+Para parar o container, use:
+
+```bash
+docker stop <container_id>
+```
+
+
 
 ## Datasets
 
