@@ -57,7 +57,7 @@ def run(image):
         detection_label = detector_model.names[int(cls)]
         detection_confidence = float(conf)
     
-        # Recortar e redimensionar a imagem para a classificação
+        # Recortar a imagem para a classificação
         cropped_image = image[y1:y2, x1:x2]
         cropped_image_rgb = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB)
         pil_image = Image.fromarray(cropped_image_rgb).resize((224, 224), Image.Resampling.LANCZOS)
