@@ -1,0 +1,86 @@
+input[type='file'] {
+    display: none;
+}
+
+#fileInputLabel {
+    padding: 2%;
+    border: 1px dashed black;
+    border-radius: 20px;
+    width: 100%;
+    height: 90px;
+    display: flex;                   
+    justify-content: center;         
+    align-items: center;              
+    text-align: center;   
+}
+
+#fileInputLabel i {
+    margin-right: 10px;  
+    font-size: 20px;
+}
+
+
+input[type="range"] {
+    -webkit-appearance: none;  
+    -moz-appearance: none;     
+    appearance: none;          
+    width: 100%;               
+    height: 8px;               
+    background: #000;          
+    border-radius: 5px;        
+}
+
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;  
+    appearance: none;          
+    width: 15px;               
+    height: 15px;              
+    background: #F8312F;       
+    border-radius: 50%;        
+    cursor: pointer;          
+    margin-top: -4px; 
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 15px;               
+    height: 15px;              
+    background: #F8312F;       
+    border-radius: 50%;        
+    cursor: pointer;          
+}
+
+
+input[type="range"]::-webkit-slider-runnable-track {
+    background: #000;         
+    border-radius: 5px;       
+}
+
+input[type="range"]::-moz-range-track {
+    background: #000;         
+    border-radius: 5px;       
+}
+
+.image-container {
+    position: relative;
+    background-color: black;
+    width: 100%;
+    height: 640px;
+    min-height: 150px;  /* Ajuste conforme necessário */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 20px;
+    overflow: hidden; /* Garante que o excesso da imagem seja cortado */
+}
+
+#outputImage {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Faz a imagem preencher o container mantendo a proporção */
+}
+
+
+#noImageText {
+    font-size: 1.5em;
+}
