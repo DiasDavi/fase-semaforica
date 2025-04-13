@@ -1,4 +1,5 @@
 import os
+import tempfile
 import warnings
 import logging
 
@@ -14,9 +15,10 @@ logging.getLogger('tensorflow').setLevel(logging.ERROR)
 import cv2
 import numpy as np
 import base64
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, Response, json, render_template, request, jsonify, stream_with_context
 from utils.detection import detect_bboxes, load_detector_config, update_detector_config
 from utils.classification import classify_traffic_light, load_classifier_config, update_classifier_config
+from utils.traffic_light_tracker import SimpleTracker
 
 # Inicializar a aplicação Flask
 app = Flask(__name__)
@@ -61,9 +63,7 @@ def update_classifier_config_route():
     return jsonify({"message": "Configurações atualizadas com sucesso", "confidence": config_updates['confidence']}), 200
 
 # Rota POST para receber e processar imagem
-import base64
-
-@app.route('/detect', methods=['POST'])
+@app.route('/detect-image', methods=['POST'])
 def traffic_light_ia_route():
     if 'file' not in request.files:
         return jsonify({"error": "Nenhuma imagem enviada"}), 400
@@ -124,6 +124,74 @@ def traffic_light_ia_route():
             "image_base64": image_base64
         }
     })
+    
+# Rota POST para receber e processar vídeo
+@app.route('/detect-video', methods=['POST'])
+def traffic_light_video_route():
+    if 'file' not in request.files:
+        return jsonify({"error": "Nenhum vídeo enviado"}), 400
+
+    file = request.files['file']
+
+    # Salva o vídeo temporariamente
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
+        tmp_file.write(file.read())
+        tmp_path = tmp_file.name
+
+    def generate_frames():
+        cap = cv2.VideoCapture(tmp_path)
+        tracker = SimpleTracker(max_distance=150, max_age=50)
+
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            detections = detect_bboxes(frame)
+            boxes_for_tracker = []
+            classes_for_tracker = []
+
+            for det in detections:
+                x1, y1, x2, y2 = det['bbox']
+                conf = det['confidence']
+                crop = frame[y1:y2, x1:x2]
+                class_name, _ = classify_traffic_light(crop)
+
+                boxes_for_tracker.append([x1, y1, x2, y2, conf])
+                classes_for_tracker.append(class_name)
+
+            tracked = tracker.update(boxes_for_tracker, classes_for_tracker)
+
+            frame_data = {
+                "detections": [],
+                "classifications": []
+            }
+
+            for track_id, x1, y1, x2, y2, class_name in tracked:
+                color = (0, 255, 0) if class_name == "verde" else (0, 255, 255) if class_name == "amarelo" else (0, 0, 255)
+                cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
+                cv2.putText(frame, f"{class_name} ID {track_id}", (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+
+                frame_data["detections"].append({
+                    "id": track_id,
+                    "bbox": [int(x1), int(y1), int(x2), int(y2)]
+                })
+                frame_data["classifications"].append({
+                    "id": track_id,
+                    "classification": class_name
+                })
+
+            # Codifica frame
+            _, buffer = cv2.imencode('.jpg', frame)
+            frame_base64 = base64.b64encode(buffer).decode('utf-8')
+            frame_data["frame_base64"] = frame_base64
+
+            yield json.dumps(frame_data) + "\n"
+
+        cap.release()
+
+    return Response(stream_with_context(generate_frames()), mimetype='application/x-ndjson')
+
 
 # Rodar a aplicação Flask
 if __name__ == "__main__":
