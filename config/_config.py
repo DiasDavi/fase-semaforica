@@ -1,4 +1,4 @@
-DETECT_MODEL_PATH = "models/detect.pt"
+DETECT_MODEL_PATH = "models/detectV0.pt"
 CLASSIFIER_MODEL_PATH = "models/classifier.h5"
 
 DETECTION_IMG_SIZE = (640, 640)
